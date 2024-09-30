@@ -10,10 +10,10 @@ public class Server {
     private static Map<String, Flight> flights = new HashMap<>();
 
     static {
-        flights.put("FL123", new Flight("FL123", "09:00", 300, 100));
-        flights.put("FL456", new Flight("FL456", "12:00", 450, 50));
+        // 在服务器启动时初始化航班信息
+        flights.put("FL123", new Flight("FL123", "09:00", 300, 100, "Taipei", "Tokyo"));
+        flights.put("FL456", new Flight("FL456", "12:00", 450, 50, "Taipei", "Osaka"));
     }
-
     public static void main(String[] args) {
         try (DatagramSocket serverSocket = new DatagramSocket(SERVER_PORT)) {
             byte[] receiveBuffer = new byte[1024];
@@ -79,20 +79,24 @@ public class Server {
         }
     }
 
-    // 航班类
+    // 航班类定义
     static class Flight {
         String flightId;
         String departure;
         int price;
         int seats;
-        String src;
-        String dest;
+        String src;  // 出发地
+        String dest; // 目的地
 
-        public Flight(String flightId, String departure, int price, int seats) {
+        // 完整的构造函数，确保所有字段都被初始化
+        public Flight(String flightId, String departure, int price, int seats, String src, String dest) {
             this.flightId = flightId;
             this.departure = departure;
             this.price = price;
             this.seats = seats;
+            this.src = src;  // 初始化出发地
+            this.dest = dest; // 初始化目的地
         }
     }
+
 }
