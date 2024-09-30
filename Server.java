@@ -10,10 +10,10 @@ public class Server {
     private static Map<String, Flight> flights = new HashMap<>();
 
     static {
-        // 在服务器启动时初始化航班信息
-        flights.put("FL123", new Flight("FL123", "09:00", 300, 100, "Taipei", "Tokyo"));
-        flights.put("FL456", new Flight("FL456", "12:00", 450, 50, "Taipei", "Osaka"));
+        flights.put("FL123", new Flight("FL123", "09:00", 300, 100));
+        flights.put("FL456", new Flight("FL456", "12:00", 450, 50));
     }
+
     public static void main(String[] args) {
         try (DatagramSocket serverSocket = new DatagramSocket(SERVER_PORT)) {
             byte[] receiveBuffer = new byte[1024];
@@ -71,32 +71,54 @@ public class Server {
 
                     DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, clientAddress, clientPort);
                     serverSocket.send(sendPacket);
+                } else if (opCode == 3) {  // 假設 opCode 3 是預訂座位的操作碼
+                    // 解析航班號和預訂座位數
+                    byte[] flightIdBytes = new byte[10];
+                    byteBuffer.get(flightIdBytes);  // 獲取航班號
+                    int requestedSeats = byteBuffer.getInt();  // 獲取預訂座位數
+                
+                    String flightId = new String(flightIdBytes).trim();
+                    Flight flight = flights.get(flightId);  // 從 flights map 中找到相應航班
+                
+                    byte[] sendData;
+                    if (flight == null) {
+                        // 如果航班號不存在，返回錯誤訊息
+                        sendData = "0, 航班不存在".getBytes();
+                    } else if (flight.seats < requestedSeats) {
+                        // 如果剩餘座位不足，返回錯誤訊息
+                        sendData = "0, 座位數不足".getBytes();
+                    } else {
+                        // 預訂成功，減少座位數並返回確認訊息
+                        flight.seats -= requestedSeats;
+                        sendData = String.format("1, 預訂成功, 剩餘座位數: %d", flight.seats).getBytes();
+                    }
+                
+                    // 發送回應給客戶端
+                    DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, clientAddress, clientPort);
+                    serverSocket.send(sendPacket);
                 }
-                // 其他操作码如座位预订、取消等的处理可扩展实现
+                
+                
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    // 航班类定义
+    // 航班类
     static class Flight {
         String flightId;
         String departure;
         int price;
         int seats;
-        String src;  // 出发地
-        String dest; // 目的地
+        String src;
+        String dest;
 
-        // 完整的构造函数，确保所有字段都被初始化
-        public Flight(String flightId, String departure, int price, int seats, String src, String dest) {
+        public Flight(String flightId, String departure, int price, int seats) {
             this.flightId = flightId;
             this.departure = departure;
             this.price = price;
             this.seats = seats;
-            this.src = src;  // 初始化出发地
-            this.dest = dest; // 初始化目的地
         }
     }
-
 }
