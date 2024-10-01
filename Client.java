@@ -7,12 +7,27 @@ public class Client {
     private static final int SERVER_PORT = 12345;
 
     public static void main(String[] args) {
-        try (DatagramSocket clientSocket = new DatagramSocket()) {
-            Scanner scanner = new Scanner(System.in);
+        /*try (DatagramSocket clientSocket = new DatagramSocket()) {
+            Scanner scanner = new Scanner(System.in); */
+        try (DatagramSocket clientSocket = new DatagramSocket();
+            Scanner scanner = new Scanner(System.in)){
+            boolean exit = false;
 
-            System.out.println("请输入出发地: ");
+                while (!exit) {
+                    System.out.println("\nMain Menu:");
+                    System.out.println("1. Query Flight by Source and Destination");
+                    System.out.println("2. Query Flight Details by Flight ID");
+                    System.out.println("3. Exit");
+                    System.out.print("Enter your choice: ");
+                    int choice = scanner.nextInt();
+                    scanner.nextLine(); // Consume newline
+    
+                    switch (choice) {
+                        case 1:
+
+            System.out.println("\n请输入出发地\nPlease enter departure: ");
             String src = scanner.nextLine();
-            System.out.println("请输入目的地: ");
+            System.out.println("请输入目的地\nPlease enter destination: ");
             String dest = scanner.nextLine();
 
             // 构建请求数据
@@ -33,7 +48,41 @@ public class Client {
             clientSocket.receive(receivePacket);
 
             String response = new String(receivePacket.getData()).trim();
-            System.out.println("服务器响应: " + response);
+            System.out.println("服务器响应\nServer response: " + response);
+            break;
+
+            case 2:
+                System.out.println("请输入航班ID\nPlease enter flight ID: ");
+                String flightId = scanner.nextLine();
+
+                // 构建请求数据
+                byteBuffer = ByteBuffer.allocate(1024);
+                byteBuffer.put((byte) 2);  // 操作码：2表示查询航班详细信息
+                byteBuffer.put(formatString(flightId, 10).getBytes());
+
+                sendData = byteBuffer.array();
+
+                // 发送请求
+                sendPacket = new DatagramPacket(sendData, sendData.length, InetAddress.getByName(SERVER_ADDRESS), SERVER_PORT);
+                clientSocket.send(sendPacket);
+
+                // 接收响应
+                receiveBuffer = new byte[1024];
+                receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
+                clientSocket.receive(receivePacket);
+
+                response = new String(receivePacket.getData()).trim();
+                System.out.println("服务器响应\nServer response: " + response);
+                break;
+
+            case 3:
+                exit = true;
+                break;
+
+            default:
+                System.out.println("无效选择，请重试。\nInvalid choice. Please try again.");
+        }
+    }
         } catch (Exception e) {
             e.printStackTrace();
         }
