@@ -17,7 +17,7 @@ public class Server {
     public static void main(String[] args) {
         try (DatagramSocket serverSocket = new DatagramSocket(SERVER_PORT)) {
             byte[] receiveBuffer = new byte[1024];
-            System.out.println("Server is running...");
+            System.out.println("\nServer is running...\n");
 
             while (true) {
                 DatagramPacket receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
@@ -39,18 +39,27 @@ public class Server {
                     String dest = new String(destBytes).trim();
 
                     // 查找符合条件的航班
-                    StringBuilder matchingFlights = new StringBuilder();
+                    /*StringBuilder matchingFlights = new StringBuilder();
                     for (Flight flight : flights.values()) {
                         if (flight.src.equals(src) && flight.dest.equals(dest)) {
                             matchingFlights.append(flight.flightId).append(",");
+                        }
+                    }*/
+                    StringBuilder matchingFlights = new StringBuilder();
+                    for (Flight flight : flights.values()) {
+                        if (flight.src.equals(src) && flight.dest.equals(dest)) {
+                            matchingFlights.append(String.format("Your Flight ID: %s, Departure Time: %s, Price: %d, Seat number: %s",
+                                    flight.flightId, flight.departure, flight.price, flight.seats));
                         }
                     }
 
                     byte[] sendData;
                     if (matchingFlights.length() > 0) {
-                        sendData = ("1," + matchingFlights.toString()).getBytes();
+                        //sendData = ("1," + matchingFlights.toString()).getBytes();   
+                        sendData = (matchingFlights.toString()).getBytes();                       
                     } else {
-                        sendData = "0".getBytes();  // 无航班匹配
+                        //sendData = "0".getBytes();  // 无航班匹配
+                        sendData = String.format("No such flight based on your departure and destination: %s, %s", src, dest).getBytes();
                     }
 
                     DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, clientAddress, clientPort);
@@ -64,9 +73,10 @@ public class Server {
                     Flight flight = flights.get(flightId);
                     byte[] sendData;
                     if (flight != null) {
-                        sendData = String.format("1,%s,%d,%d", flight.departure, flight.price, flight.seats).getBytes();
+                        sendData = String.format("Your Flight ID: %s, Departure Time: %s, Price: %d, Seat number: %s", flight.flightId, flight.departure, flight.price, flight.seats).getBytes();                        
                     } else {
-                        sendData = "0".getBytes();  // 无该航班
+                        //sendData = "0".getBytes();  // 无该航班
+                        sendData = String.format("No such flight based on your flight ID: %s", flightId).getBytes();
                     }
 
                     DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, clientAddress, clientPort);
