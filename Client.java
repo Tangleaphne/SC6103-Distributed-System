@@ -11,9 +11,9 @@ public class Client {
             Scanner scanner = new Scanner(System.in);
 
             // 顯示選單
-            System.out.println("請選擇操作：");
-            System.out.println("1. 查詢航班");
-            System.out.println("2. 預訂座位");
+            System.out.println("Main menu：");
+            System.out.println("1. Query Flight by Source and Destination");
+            System.out.println("2. Reserve seats");
             int choice = scanner.nextInt();
             scanner.nextLine(); // 處理換行符
 
