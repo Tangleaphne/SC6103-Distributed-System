@@ -105,7 +105,7 @@ public class Server {
                     } else if (flight.seats < requestedSeats) {
                         // 如果剩餘座位不足，返回錯誤訊息
                         //sendData = "0, 座位數不足".getBytes();
-                        sendData = String.format("Seats are fully booked based on your flight ID: %s", flightId).getBytes();
+                        sendData = String.format("Seats are fully booked based on your flight ID: %s. Please choose another flight.", flightId).getBytes();
                     } else {
                         // 生成預訂編號，並存儲預訂信息
                         int reservationId = reservations.get(flightId).size() + 1;
