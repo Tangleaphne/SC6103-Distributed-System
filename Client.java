@@ -19,9 +19,9 @@ public class Client {
 
             if (choice == 1) {
                 // 查詢航班
-                System.out.println("请输入出发地: ");
+                System.out.println("Please enter departure: ");
                 String src = scanner.nextLine();
-                System.out.println("请输入目的地: ");
+                System.out.println("Please enter destination: ");
                 String dest = scanner.nextLine();
 
                 // 构建查询航班的请求
@@ -36,9 +36,9 @@ public class Client {
 
             } else if (choice == 2) {
                 // 預訂座位
-                System.out.println("請輸入班機號：");
+                System.out.println("Please enter flight ID：");
                 String flightId = scanner.nextLine();
-                System.out.println("請輸入預訂座位數：");
+                System.out.println("Please enter number of seats to reserve：");
                 int seats = scanner.nextInt();
 
                 // 構建預訂座位的請求
@@ -58,7 +58,7 @@ public class Client {
             clientSocket.receive(receivePacket);
 
             String response = new String(receivePacket.getData()).trim();
-            System.out.println("伺服器回應: " + response);
+            System.out.println("Server Response: " + response);
 
         } catch (Exception e) {
             e.printStackTrace();
