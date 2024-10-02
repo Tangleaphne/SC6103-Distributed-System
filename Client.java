@@ -15,9 +15,10 @@ public class Client {
             System.out.println("1. 查詢航班");
             System.out.println("2. 預訂座位");
             System.out.println("3. 取消預訂");
+            System.out.println("4. 查詢航班詳細訊息");
             int choice = scanner.nextInt();
             scanner.nextLine(); // 處理換行符
-
+            
             if (choice == 1) {
                 // 查詢航班
                 System.out.println("请输入出发地: ");
@@ -44,6 +45,28 @@ public class Client {
                 System.out.println("伺服器回應: " + response);
 
             } else if (choice == 2) {
+                // 查詢航班詳細訊息
+                System.out.println("請輸入班機號：");
+                String flightId = scanner.nextLine();
+
+                // 構建查詢航班詳細訊息的請求
+                ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
+                byteBuffer.put((byte) 5);  // 操作码：5表示查詢航班詳細訊息
+                byteBuffer.put(formatString(flightId, 10).getBytes());  // 班機號
+
+                byte[] sendData = byteBuffer.array();
+                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, InetAddress.getByName(SERVER_ADDRESS), SERVER_PORT);
+                clientSocket.send(sendPacket);
+
+                // 接收伺服器的回應
+                byte[] receiveBuffer = new byte[1024];
+                DatagramPacket receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
+                clientSocket.receive(receivePacket);
+
+                String response = new String(receivePacket.getData()).trim();
+                System.out.println("伺服器回應: " + response);
+                
+            } else if (choice == 3) {
                 // 預訂座位
                 System.out.println("請輸入班機號：");
                 String flightId = scanner.nextLine();
@@ -68,7 +91,7 @@ public class Client {
                 String response = new String(receivePacket.getData()).trim();
                 System.out.println("伺服器回應: " + response);
 
-            } else if (choice == 3) {
+            } else if (choice == 4) {
                 // 取消預訂
                 System.out.println("請輸入班機號：");
                 String flightId = scanner.nextLine();
@@ -92,7 +115,7 @@ public class Client {
 
                 String response = new String(receivePacket.getData()).trim();
                 System.out.println("伺服器回應: " + response);
-            }
+            } 
         } catch (Exception e) {
             e.printStackTrace();
         }
