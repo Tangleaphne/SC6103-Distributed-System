@@ -11,22 +11,23 @@ public class Client {
             Scanner scanner = new Scanner(System.in);
 
             // 顯示選單
-            System.out.println("Main menu：");
-            System.out.println("1. Query Flight by Source and Destination");
-            System.out.println("2. Reserve seats");
+            System.out.println("請選擇操作：");
+            System.out.println("1. 查詢航班");
+            System.out.println("2. 預訂座位");
+            System.out.println("3. 取消預訂");
             int choice = scanner.nextInt();
             scanner.nextLine(); // 處理換行符
 
             if (choice == 1) {
                 // 查詢航班
-                System.out.println("Please enter departure: ");
+                System.out.println("请输入出发地: ");
                 String src = scanner.nextLine();
-                System.out.println("Please enter destination: ");
+                System.out.println("请输入目的地: ");
                 String dest = scanner.nextLine();
 
                 // 构建查询航班的请求
                 ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
-                byteBuffer.put((byte) 1);  // 操作碼：1表示查询航班
+                byteBuffer.put((byte) 1);  // 操作码：1表示查询航班
                 byteBuffer.put(formatString(src, 10).getBytes());  // 出发地
                 byteBuffer.put(formatString(dest, 10).getBytes()); // 目的地
 
@@ -34,11 +35,19 @@ public class Client {
                 DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, InetAddress.getByName(SERVER_ADDRESS), SERVER_PORT);
                 clientSocket.send(sendPacket);
 
+                // 接收伺服器的回應
+                byte[] receiveBuffer = new byte[1024];
+                DatagramPacket receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
+                clientSocket.receive(receivePacket);
+
+                String response = new String(receivePacket.getData()).trim();
+                System.out.println("伺服器回應: " + response);
+
             } else if (choice == 2) {
                 // 預訂座位
-                System.out.println("Please enter flight ID：");
+                System.out.println("請輸入班機號：");
                 String flightId = scanner.nextLine();
-                System.out.println("Please enter number of seats to reserve：");
+                System.out.println("請輸入預訂座位數：");
                 int seats = scanner.nextInt();
 
                 // 構建預訂座位的請求
@@ -50,16 +59,40 @@ public class Client {
                 byte[] sendData = byteBuffer.array();
                 DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, InetAddress.getByName(SERVER_ADDRESS), SERVER_PORT);
                 clientSocket.send(sendPacket);
+
+                // 接收伺服器的回應
+                byte[] receiveBuffer = new byte[1024];
+                DatagramPacket receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
+                clientSocket.receive(receivePacket);
+
+                String response = new String(receivePacket.getData()).trim();
+                System.out.println("伺服器回應: " + response);
+
+            } else if (choice == 3) {
+                // 取消預訂
+                System.out.println("請輸入班機號：");
+                String flightId = scanner.nextLine();
+                System.out.println("請輸入預訂編號：");
+                int reservationId = scanner.nextInt();
+
+                // 構建取消預訂的請求
+                ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
+                byteBuffer.put((byte) 4);  // 操作码：4表示取消預訂
+                byteBuffer.put(formatString(flightId, 10).getBytes());  // 班機號
+                byteBuffer.putInt(reservationId);  // 預訂編號
+
+                byte[] sendData = byteBuffer.array();
+                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, InetAddress.getByName(SERVER_ADDRESS), SERVER_PORT);
+                clientSocket.send(sendPacket);
+
+                // 接收伺服器的回應
+                byte[] receiveBuffer = new byte[1024];
+                DatagramPacket receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
+                clientSocket.receive(receivePacket);
+
+                String response = new String(receivePacket.getData()).trim();
+                System.out.println("伺服器回應: " + response);
             }
-
-            // 接收伺服器的回應
-            byte[] receiveBuffer = new byte[1024];
-            DatagramPacket receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
-            clientSocket.receive(receivePacket);
-
-            String response = new String(receivePacket.getData()).trim();
-            System.out.println("Server Response: " + response);
-
         } catch (Exception e) {
             e.printStackTrace();
         }
