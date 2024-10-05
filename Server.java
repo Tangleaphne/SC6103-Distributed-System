@@ -60,8 +60,8 @@ public class Server {
 
                     byte[] sendData;
                     if (matchingFlights.length() > 0) {
-                        //sendData = ("1," + matchingFlights.toString()).getBytes();   
-                        sendData = (matchingFlights.toString()).getBytes();                       
+                        //sendData = ("1," + matchingFlights.toString()).getBytes();
+                        sendData = (matchingFlights.toString()).getBytes();
                     } else {
                         //sendData = "0".getBytes();  // 无航班匹配
                         sendData = String.format("No such flight based on your departure and destination: %s, %s", src, dest).getBytes();
@@ -155,6 +155,33 @@ public class Server {
                     // 發送回應給客戶端
                     DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, clientAddress, clientPort);
                     serverSocket.send(sendPacket);
+                } else if (opCode == 5) { // 添加行李功能
+                    byte[] sendData;
+                    String flightId = new String(receivePacket.getData(), 1, 10).trim();
+                    int reservationId = ByteBuffer.wrap(receivePacket.getData(), 11, 4).getInt();
+                    int luggageCount = ByteBuffer.wrap(receivePacket.getData(), 15, 4).getInt();
+
+                    Flight flight = flights.get(flightId);
+                    if (flight == null) {
+                        sendData = String.format("Flight %s not found.", flightId).getBytes();
+                    } else {
+                        Map<Integer, Integer> flightReservations = reservations.get(flightId);
+                        if (flightReservations == null || !flightReservations.containsKey(reservationId)) {
+                            sendData = String.format("No booking with reservation ID: %d.", reservationId).getBytes();
+                        } else {
+                            int currentLuggageCount = flightReservations.getOrDefault(reservationId, 0);
+                            currentLuggageCount += luggageCount;
+                            flightReservations.put(reservationId, currentLuggageCount);
+                            sendData = String.format("Successfully added %d luggages. Total luggages: %d.", luggageCount, currentLuggageCount).getBytes();
+                        }
+                    }
+
+                    DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, clientAddress, clientPort);
+                    serverSocket.send(sendPacket);
+
+                } else if (opCode == 6) { // Exit 功能
+                    System.out.println("Exit command received, shutting down...");
+                    break;
                 }
             }
         } catch (Exception e) {

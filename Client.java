@@ -19,12 +19,14 @@ public class Client {
                     System.out.println("2. Query Flight Details by Flight ID");
                     System.out.println("3. Add new booking");
                     System.out.println("4. Cancel Booking");
-                    System.out.println("5. Exit");
+                    /*System.out.println("5. Exit"); */
+                    System.out.println("5. Add Luggage");  // 修改點：新增添加行李功能
+                    System.out.println("6. Exit");         // 修改點：Exit變成第六個功能
                     System.out.print("Enter your choice: ");
                     int choice = scanner.nextInt();
                     scanner.nextLine(); // Consume newline
-    
-                    switch (choice) 
+
+                    switch (choice)
                     {
                         case 1:
 
@@ -77,7 +79,7 @@ public class Client {
                         response = new String(receivePacket.getData()).trim();
                         System.out.println("Server response: " + response);
                         break;
-                        
+
                         case 3:
                         // 預訂座位
                         System.out.println("Please enter flight ID: ");
@@ -144,7 +146,33 @@ public class Client {
                         System.out.println("Server response: " + response);
                         break;
 
-                        case 5:
+                        case 5: // 添加行李功能
+                        System.out.println("Please enter your flight ID: ");
+                        String flightId = scanner.nextLine();
+                        System.out.println("Please enter your reservation ID: ");
+                        int reservationId = scanner.nextInt();
+                        System.out.println("Please enter the number of luggages to add: ");
+                        int luggageCount = scanner.nextInt();
+
+                        ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
+                        byteBuffer.put((byte) 5);  // 操作碼：5表示添加行李
+                        byteBuffer.put(formatString(flightId, 10).getBytes());
+                        byteBuffer.putInt(reservationId);
+                        byteBuffer.putInt(luggageCount);
+                        byte[] sendData = byteBuffer.array();
+
+                        DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, InetAddress.getByName(SERVER_ADDRESS), SERVER_PORT);
+                        clientSocket.send(sendPacket);
+
+                        // 等待伺服器回應
+                        byte[] receiveData = new byte[1024];
+                        DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                        clientSocket.receive(receivePacket);
+                        String response = new String(receivePacket.getData(), 0, receivePacket.getLength());
+                        System.out.println("Server response: " + response);
+                        break;
+
+                        case 6:
                         exit = true;
                         break;
 
@@ -155,7 +183,7 @@ public class Client {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    
+
 }
 
     // 将字符串格式化为固定长度
