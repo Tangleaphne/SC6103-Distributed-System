@@ -4,7 +4,10 @@ import java.util.Scanner;
 
 public class Client {
     private static final String SERVER_ADDRESS = "localhost";
+    //private static final String SERVER_ADDRESS = "0.tcp.ap.ngrok.io";
+
     private static final int SERVER_PORT = 12345;
+    //private static final int SERVER_PORT = 14414;
 
     public static void main(String[] args) {
         /*try (DatagramSocket clientSocket = new DatagramSocket()) {
@@ -19,7 +22,9 @@ public class Client {
                     System.out.println("2. Query Flight Details by Flight ID");
                     System.out.println("3. Add new booking");
                     System.out.println("4. Cancel Booking");
-                    System.out.println("5. Exit");
+                    System.out.println("5. Add Luggage");  // 修改點：新增添加行李功能
+                    System.out.println("6. Monitor Seat Availability");
+                    System.out.println("7. Exit");
                     System.out.print("Enter your choice: ");
                     int choice = scanner.nextInt();
                     scanner.nextLine(); // Consume newline
@@ -144,7 +149,81 @@ public class Client {
                         System.out.println("Server response: " + response);
                         break;
 
-                        case 5:
+                        case 5: // 添加行李功能
+                        System.out.println("Please enter your flight ID: ");
+                        //String flightId = scanner.nextLine();
+                        flightId = scanner.nextLine();
+                        System.out.println("Please enter your reservation ID: ");
+                        //int reservationId = scanner.nextInt();
+                        reservationId = scanner.nextInt();
+                        System.out.println("Please enter the number of luggages to add: ");
+                        int luggageCount = scanner.nextInt();
+
+                        //ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
+                        byteBuffer = ByteBuffer.allocate(1024);
+                        byteBuffer.put((byte) 5);  // 操作碼：5表示添加行李
+                        byteBuffer.put(formatString(flightId, 10).getBytes());
+                        byteBuffer.putInt(reservationId);
+                        byteBuffer.putInt(luggageCount);
+                        //byte[] sendData = byteBuffer.array();
+                        sendData = byteBuffer.array();
+
+                        //DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, InetAddress.getByName(SERVER_ADDRESS), SERVER_PORT);
+                        sendPacket = new DatagramPacket(sendData, sendData.length, InetAddress.getByName(SERVER_ADDRESS), SERVER_PORT);
+                        clientSocket.send(sendPacket);
+
+                        // 等待伺服器回應
+                        byte[] receiveData = new byte[1024];
+                        //DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                        receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                        clientSocket.receive(receivePacket);
+                        //String response = new String(receivePacket.getData(), 0, receivePacket.getLength());
+                        response = new String(receivePacket.getData(), 0, receivePacket.getLength());
+                        
+                        System.out.println("Server response: " + response);
+
+                        break;
+
+                        case 6:
+                        System.out.println("Please enter flight ID to monitor: ");
+                        //String flightId = scanner.nextLine();
+                        flightId = scanner.nextLine();
+                        System.out.println("Please enter monitor interval in seconds: ");
+                        int monitorInterval = scanner.nextInt();
+
+                        //ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
+                        byteBuffer = ByteBuffer.allocate(1024);
+                        byteBuffer.put((byte) 6);  // 操作码：6表示监控座位
+                        byteBuffer.put(formatString(flightId, 10).getBytes());
+                        byteBuffer.putInt(monitorInterval);
+
+                        //byte[] sendData = byteBuffer.array();
+                        sendData = byteBuffer.array();
+                        //DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, InetAddress.getByName(SERVER_ADDRESS), SERVER_PORT);
+                        sendPacket = new DatagramPacket(sendData, sendData.length, InetAddress.getByName(SERVER_ADDRESS), SERVER_PORT);
+                        clientSocket.send(sendPacket);
+                        System.out.println("Registered for seat availability updates for flight: " + flightId);
+
+                        // Set a timeout for receiving updates from the server
+                        clientSocket.setSoTimeout((monitorInterval + 1) * 1000); // Set timeout slightly longer than monitor interval
+
+                        try {
+                            // Listen for a single update from the server
+                            byte[] localReceiveBuffer = new byte[1024];
+                            DatagramPacket localReceivePacket = new DatagramPacket(localReceiveBuffer, localReceiveBuffer.length);
+                            clientSocket.receive(localReceivePacket); // Wait for an update or timeout
+                            String localResponse = new String(localReceivePacket.getData(), 0, localReceivePacket.getLength()).trim();
+                            System.out.println("Update received from server: " + localResponse);
+                        } catch (SocketTimeoutException e) {
+                            System.out.printf("No updates received within the interval %d seconds. Returning to main menu.\n", monitorInterval);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+
+                        break;
+
+                        case 7:
+                        System.out.println("Exit command received, shutting down... Have a nice day!\n");
                         exit = true;
                         break;
 

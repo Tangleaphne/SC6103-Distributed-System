@@ -21,6 +21,7 @@ public class Server {
     }
     public static void main(String[] args) {
         try (DatagramSocket serverSocket = new DatagramSocket(SERVER_PORT)) {
+        //try (DatagramSocket serverSocket = new DatagramSocket(SERVER_PORT, InetAddress.getByName("0.0.0.0"))){
             byte[] receiveBuffer = new byte[1024];
             System.out.println("\nServer is running...\n");
 
@@ -113,6 +114,10 @@ public class Server {
 
                         // 預訂成功，減少座位數並返回確認訊息
                         flight.seats -= requestedSeats;
+
+                        // Notify all clients monitoring this flight
+                        SeatMonitor.notifyClients(flightId, flight.seats);
+
                         //sendData = String.format("1, 預訂成功, 預訂編號: %d, 剩餘座位數: %d", reservationId, flight.seats).getBytes();
                         sendData = String.format("Seat booking is successful. Reservation ID: %d, remaining seats: %d", reservationId, flight.seats).getBytes();
                     }
@@ -155,7 +160,54 @@ public class Server {
                     // 發送回應給客戶端
                     DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, clientAddress, clientPort);
                     serverSocket.send(sendPacket);
-                }
+                } else if (opCode == 5) { // 添加行李功能
+                    byte[] sendData;
+                    String flightId = new String(receivePacket.getData(), 1, 10).trim();
+                    int reservationId = ByteBuffer.wrap(receivePacket.getData(), 11, 4).getInt();
+                    int luggageCount = ByteBuffer.wrap(receivePacket.getData(), 15, 4).getInt();
+
+                    Flight flight = flights.get(flightId);
+                    if (flight == null) {
+                        sendData = String.format("Flight %s not found.", flightId).getBytes();
+                    } else {
+                        Map<Integer, Integer> flightReservations = reservations.get(flightId);
+                        if (flightReservations == null || !flightReservations.containsKey(reservationId)) {
+                            sendData = String.format("No booking with reservation ID: %d.", reservationId).getBytes();
+                        } else {
+                            int currentLuggageCount = flightReservations.getOrDefault(reservationId, 0);
+                            currentLuggageCount += luggageCount;
+                            flightReservations.put(reservationId, currentLuggageCount);
+                            sendData = String.format("Successfully added %d luggages. Total luggages: %d.", luggageCount, currentLuggageCount).getBytes();
+                        }
+                    }
+
+                    DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, clientAddress, clientPort);
+                    serverSocket.send(sendPacket);
+                
+                } else if (opCode == 6) {
+                    // Register for monitoring seat availability
+                    byte[] flightIdBytes = new byte[10];
+                    byteBuffer.get(flightIdBytes);
+                    String flightId = new String(flightIdBytes).trim();
+                    int monitorInterval = byteBuffer.getInt(); // Monitor interval in seconds
+
+                    byte[] sendData;
+
+                    if (!flights.containsKey(flightId)) {
+                        // If flight ID does not exist, send an error response to the client
+                        sendData = String.format("Error: Flight ID %s does not exist.", flightId).getBytes();
+                        DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, clientAddress, clientPort);
+                        serverSocket.send(sendPacket);
+                    } else {
+                        // Register the client for monitoring
+                        SeatMonitor.registerClient(flightId, clientAddress, clientPort, monitorInterval);
+                        System.out.println("Client registered to monitor flight: " + flightId + "\n");
+                    }
+                } 
+                /*else if (opCode == 7) { // Exit 功能
+                    System.out.println("Exit command received, shutting down...");
+                    break;
+                }*/
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -181,5 +233,53 @@ public class Server {
             this.dest = dest; // 初始化目的地
         }
     }
+    
+        // SeatMonitor class to manage callbacks
+        static class SeatMonitor {
+            private static Map<String, Map<InetAddress, Integer>> clientCallbacks = new HashMap<>();
+    
+            public static void registerClient(String flightId, InetAddress clientAddress, int clientPort, int monitorInterval) {
+                clientCallbacks.putIfAbsent(flightId, new HashMap<>());
+                clientCallbacks.get(flightId).put(clientAddress, clientPort);
+    
+                new Thread(() -> {
+                    try {
+                        Thread.sleep(monitorInterval * 1000L);
+                        unregisterClient(flightId, clientAddress);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }).start();
+                System.out.println("Client MONITORING for flight: " + flightId + ", Address: " + clientAddress + ", Port: " + clientPort);
+            }
+    
+            public static void unregisterClient(String flightId, InetAddress clientAddress) {
+                Map<InetAddress, Integer> clients = clientCallbacks.get(flightId);
+                if (clients != null) {
+                    clients.remove(clientAddress);
+                    if (clients.isEmpty()) {
+                        clientCallbacks.remove(flightId);
+                    }
+                }
+            }
+    
+            public static void notifyClients(String flightId, int seatsAvailable) {
+                Map<InetAddress, Integer> clients = clientCallbacks.get(flightId);
+                if (clients != null) {
+                    System.out.println("Notifying clients about updated seats for flight: " + flightId + ", Seats remaining: " + seatsAvailable);
+                    for (Map.Entry<InetAddress, Integer> entry : clients.entrySet()) {
+                        System.out.println("Sending update to client: " + entry.getKey() + ":" + entry.getValue() + "\n");
+                        try (DatagramSocket socket = new DatagramSocket()) {
+                            String message = String.format("Updated seat availability for flight %s: %d seats remaining", flightId, seatsAvailable);
+                            byte[] sendData = message.getBytes();
+                            DatagramPacket packet = new DatagramPacket(sendData, sendData.length, entry.getKey(), entry.getValue());
+                            socket.send(packet);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+        }
 
 }
