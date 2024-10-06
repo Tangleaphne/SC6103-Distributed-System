@@ -25,7 +25,7 @@ public class Server {
     public static void main(String[] args) {
         try (DatagramSocket serverSocket = new DatagramSocket(SERVER_PORT)) {
             byte[] receiveBuffer = new byte[1024];
-            System.out.println("Server is running...");
+            System.out.println("\nServer is running...\n");
 
             while (true) {
                 DatagramPacket receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
@@ -75,6 +75,10 @@ public class Server {
                         String flightId = new String(flightIdBytes).trim();
                         
                         Flight flight = flights.get(flightId);
+
+                        // Add this line to print out all the flight IDs in the map
+                        System.out.println("Flight IDs in map: " + flights.keySet());
+
                         if (flight != null) {
                             sendData = String.format("Flight ID: %s, Departure: %s, Price: %d, Seats: %d",
                                     flight.flightId, flight.departure, flight.price, flight.seats).getBytes();
@@ -85,11 +89,11 @@ public class Server {
                         
                     case 3:
                         // 添加预订
-                        int requestedSeats = byteBuffer.getInt();
                         flightIdBytes = new byte[10];
                         byteBuffer.get(flightIdBytes);
+                        int requestedSeats = byteBuffer.getInt();
                         flightId = new String(flightIdBytes).trim();
-                        
+                        System.out.println("Server received flight ID: '" + flightId + "' with length: " + flightId.length());
                         flight = flights.get(flightId);
                         
                         if (flight == null) {
@@ -113,9 +117,12 @@ public class Server {
                         flightIdBytes = new byte[10];
                         byteBuffer.get(flightIdBytes);
                         flightId = new String(flightIdBytes).trim();
-                        int reservationId = byteBuffer.getInt();
+
+                        System.out.println("Server received flight ID: '" + flightId + "' with length: " + flightId.length());
+
+                        int reservationId = byteBuffer.getInt(); 
                         
-                        flight = flights.get(flightId);
+                        flight = flights.get(flightId); 
                         
                         if (flight == null) {
                             sendData = String.format("No such flight: %s", flightId).getBytes();
@@ -176,7 +183,7 @@ public class Server {
 
                 // 模拟消息丢失
                 Random random = new Random();
-                if (random.nextInt(10) > 2) {
+                if (random.nextInt(10) > 1) {
                     DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, clientAddress, clientPort);
                     serverSocket.send(sendPacket);
                     System.out.println("Response sent.");

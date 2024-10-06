@@ -76,6 +76,7 @@ public class Client {
 
                         sendData = byteBuffer.array();
                         sendWithPotentialLoss(clientSocket, sendData);
+                        System.out.println("Client is sending flight ID: '" + flightId + "'");
                         break;
 
                     case 4:
@@ -128,7 +129,7 @@ public class Client {
                         sendWithPotentialLoss(clientSocket, sendData);
 
                         // 設置接收更新的超時
-                        clientSocket.setSoTimeout((monitorInterval + 1) * 1000); // 超时比监控间隔稍长
+                        clientSocket.setSoTimeout((monitorInterval + 1) * 800); // 超时比监控间隔稍长
 
                         try {
                             // 等待伺服器更新或超時
@@ -165,7 +166,7 @@ public class Client {
         int retryCount = 0;
 
         while (!acknowledged && retryCount < MAX_RETRIES) {
-            if (random.nextInt(10) > 2) {  // 80% 機率發送訊息
+            if (random.nextInt(10) > 1) {  // 90% 機率發送訊息
                 try {
                     DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, InetAddress.getByName(SERVER_ADDRESS), SERVER_PORT);
                     socket.send(sendPacket);
@@ -173,7 +174,7 @@ public class Client {
 
                     byte[] receiveBuffer = new byte[1024];
                     DatagramPacket receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
-                    socket.setSoTimeout(5000);  // 5秒超时
+                    socket.setSoTimeout(7000);  // 7秒超时
                     socket.receive(receivePacket);
                     String response = new String(receivePacket.getData()).trim();
                     System.out.println("Server response: " + response);
