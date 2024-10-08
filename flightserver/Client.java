@@ -7,9 +7,10 @@ import java.util.InputMismatchException;
 import java.nio.charset.StandardCharsets;
 
 public class Client {
-    private static final String SERVER_ADDRESS = "localhost";
-    /*private static final String SERVER_ADDRESS = "192.168.56.1";
-    //155.69.194.63*/
+    //private static final String SERVER_ADDRESS = "localhost";
+    //private static final String SERVER_ADDRESS = "192.168.56.1";
+    private static final String SERVER_ADDRESS = "10.91.61.102";
+    //10.91.61.102
     private static final int SERVER_PORT = 12345;
     private static final int MAX_RETRIES = 5;
 
@@ -214,7 +215,7 @@ public class Client {
                     System.out.println("goooood4");
                     socket.receive(receivePacket); //沒設置 timeout 的話這裡就會永遠卡死
                     String response = new String(receivePacket.getData()).trim();
-                    System.out.println("Server response: " + response);
+                    System.out.println("Server response: \n" + response);
                     acknowledged = true;
                     System.out.println("goooood2");
                 } catch (SocketTimeoutException e) {

@@ -25,6 +25,7 @@ public class Server {
         flights.put("FL123", new Flight("FL123", "09:00", 300, 100, "Singapore", "Penang"));
         flights.put("FL456", new Flight("FL456", "12:00", 450, 50, "Shanghai", "Taipei"));
         flights.put("FL789", new Flight("FL789", "08:15", 260, 180, "Tokyo", "Beijing"));
+        flights.put("FL910", new Flight("FL910", "20:15", 360, 200, "Tokyo", "Beijing"));
         // 初始化每个航班的预订信息存储
         reservations.put("FL123", new HashMap<>());
         reservations.put("FL456", new HashMap<>());
@@ -33,7 +34,7 @@ public class Server {
 
     public static void main(String[] args) {
         
-        try (DatagramSocket serverSocket = new DatagramSocket(SERVER_PORT)) {
+        try (DatagramSocket serverSocket = new DatagramSocket(SERVER_PORT, InetAddress.getByName("10.91.61.102"))) {
             byte[] receiveBuffer = new byte[1024];
             System.out.println("\nServer is running...\n");
 
@@ -129,7 +130,7 @@ public class Server {
         StringBuilder matchingFlights = new StringBuilder();
         for (Flight flight : flights.values()) {
             if (flight.src.equals(src) && flight.dest.equals(dest)) {
-                matchingFlights.append(String.format("Flight ID: %s, Departure: %s, Price: %d, Seats: %d",
+                matchingFlights.append(String.format("Flight ID: %s, Departure: %s, Price: %d, Seats: %d \n",
                         flight.flightId, flight.departure, flight.price, flight.seats));
             }
         }
