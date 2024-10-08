@@ -14,7 +14,7 @@ public class Server {
     // 存储每个航班的预订信息
     private static Map<String, Map<Integer, Integer>> reservations = new HashMap<>();
     // 存储已处理的请求以实现 at-most-once 语义
-    private static Map<String, Boolean> processedRequests = new HashMap<>();
+    // private static Map<String, Boolean> processedRequests = new HashMap<>();
 
     static {
         // 初始化航班信息
@@ -149,8 +149,7 @@ public class Server {
         Flight flight = flights.get(flightId);
 
         if (flight != null) {
-            return String.format("Flight ID: %s, Departure: %s, Price: %d, Seats: %d",
-                    flight.flightId, flight.departure, flight.price, flight.seats).getBytes();
+            return FlightMarshaller.marshall(flight);
         } else {
             return "Flight not found.".getBytes();
         }

@@ -59,14 +59,27 @@ public class Client {
                         String flightId = scanner.nextLine();
 
                         // 构建请求数据
-                        byteBuffer.clear();
+                        // byteBuffer.clear();
+                        byteBuffer = ByteBuffer.allocate(1024);
                         byteBuffer.put((byte) 2);  // 操作码：2表示查询航班详细信息
                         byteBuffer.put(formatString(flightId, 10).getBytes());
 
                         sendData = byteBuffer.array();
 
+                        DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, InetAddress.getByName(SERVER_ADDRESS), SERVER_PORT);
+                        clientSocket.send(sendPacket);
+
+                        // 接收服务器的响应
+                        byte[] receiveData = new byte[1024];
+                        DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                        clientSocket.receive(receivePacket);
+
+                        // 反序列化接收到的数据为 Flight 对象
+                        Flight flightDetail = FlightUnmarshaller.unmarshall(receivePacket.getData());
+                        System.out.println("Received Flight details: " + flightDetail);
+
                         // 模拟訊息丟失並發送請求
-                        sendWithPotentialLoss(clientSocket, sendData);
+                        // sendWithPotentialLoss(clientSocket, sendData);
                         break;
 
                     case 3:
