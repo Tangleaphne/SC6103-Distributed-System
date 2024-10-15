@@ -1,11 +1,12 @@
 package flightserver;
+
 // Flight.java
 public class Flight {
     String flightId;
     String departure;
     int price;
     int seats;
-    String src;  // 出发地
+    String src; // 出发地
     String dest; // 目的地
 
     // 构造函数，确保所有字段都被初始化
@@ -49,6 +50,7 @@ public class Flight {
 
     @Override
     public String toString() {
-        return "\nFlight " + flightId + ": " + src + " -> " + dest + ", Departure: " + departure + ", Price: " + price + ", Seats: " + seats;
+        return "\nFlight " + flightId + ": " + src + " -> " + dest + ", Departure: " + departure + ", Price: " + price
+                + ", Seats: " + seats;
     }
 }
