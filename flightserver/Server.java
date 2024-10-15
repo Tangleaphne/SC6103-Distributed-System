@@ -77,12 +77,12 @@ public class Server {
                  * }
                  */
 
-                // 檢查是否有最近的回應 (3 秒內)
+                // 檢查是否有最近的回應 (15 秒內)
                 long currentTime = System.currentTimeMillis();
                 if (processedRequests.containsKey(requestID)) {
                     CachedResponse cachedResponse = processedRequests.get(requestID);
                     if (currentTime - cachedResponse.timestamp < 15000) {
-                        // 在 3 秒內，使用上次的回應結果
+                        // 在 15 秒內，使用上次的回應結果
                         System.out.println("Returning cached response for request: " + requestID + "\n");
                         sendResponse(serverSocket, cachedResponse.data, clientAddress, clientPort);
                         continue;
